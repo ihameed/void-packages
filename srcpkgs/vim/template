@@ -6,7 +6,7 @@ create_wrksrc=required
 hostmakedepends="gettext glib-devel pkg-config"
 makedepends="acl-devel ncurses-devel
  $(vopt_if x11 libXt-devel)
- $(vopt_if gtk3 gtk+3-devel)
+ $(vopt_if gtk2 gtk+-devel)
  $(vopt_if huge 'lua53-devel perl python3-devel ruby-devel')"
 depends="vim-common>=${version}"
 checkdepends="libtool ncurses-base"
@@ -18,18 +18,18 @@ distfiles="https://github.com/vim/vim/archive/v${version}.tar.gz"
 checksum=a9ce5b0819423d2721524c7e69778ada4ba1ab09e95ee7f2fbded6fc0254e2d2
 python_version=3
 
-build_options="x11 gtk3 huge"
+build_options="x11 gtk2 huge"
 desc_option_huge="Enable support for many language interpreters"
-build_options_default="x11 gtk3"
+build_options_default="x11 gtk2"
 # XXX vim-huge cannot be cross compiled for now.
 if [ -z "$CROSS_BUILD" ]; then
 	build_options_default+=" huge"
 fi
 
-subpackages="xxd vim-common $(vopt_if x11 vim-x11) $(vopt_if gtk3 gvim)
- $(vopt_if huge "vim-huge vim-huge-python3 $(vopt_if gtk3 gvim-huge)")"
-_subdirs="$(vopt_if x11 vim-x11) $(vopt_if gtk3 gvim)
- $(vopt_if huge "vim-huge $(vopt_if gtk3 gvim-huge)")"
+subpackages="xxd vim-common $(vopt_if x11 vim-x11) $(vopt_if gtk2 gvim)
+ $(vopt_if huge "vim-huge vim-huge-python3 $(vopt_if gtk2 gvim-huge)")"
+_subdirs="$(vopt_if x11 vim-x11) $(vopt_if gtk2 gvim)
+ $(vopt_if huge "vim-huge $(vopt_if gtk2 gvim-huge)")"
 
 alternatives="vim:vim:/usr/bin/vim-normal"
 
@@ -70,9 +70,10 @@ do_configure() {
 	fi
 
 	# GTK+ version.
-	if [ "$build_option_gtk3" ]; then
+	if [ "$build_option_gtk2" ]; then
 		cd $wrksrc/gvim
-		./configure ${configure_args} ${args} ${nohuge_args} --enable-gui=gtk3 --with-x --with-vim-name=gvim
+		#./configure ${configure_args} ${args} ${nohuge_args} --enable-gui=gtk3 --with-x --with-vim-name=gvim
+		./configure ${configure_args} ${args} ${nohuge_args} --enable-gui=gtk2 --with-x --with-vim-name=gvim
 	fi
 
 	# Huge versions
@@ -82,11 +83,17 @@ do_configure() {
 			--with-features=huge --enable-perlinterp --enable-python3interp \
 			--enable-rubyinterp --enable-luainterp --enable-terminal \
 			--with-python3-stable-abi=3.12
-		if [ "$build_option_gtk3" ]; then
+		if [ "$build_option_gtk2" ]; then
 
 			cd $wrksrc/gvim-huge
+			#./configure ${configure_args} ${args} \
+			#	--enable-gui=gtk3 --with-x \
+			#	--with-vim-name=gvim-huge --with-features=huge \
+			#	--enable-perlinterp --enable-python3interp \
+			#	--enable-rubyinterp --enable-luainterp \
+			#	--enable-terminal
 			./configure ${configure_args} ${args} \
-				--enable-gui=gtk3 --with-x \
+				--enable-gui=gtk2 --with-x \
 				--with-vim-name=gvim-huge --with-features=huge \
 				--enable-perlinterp --enable-python3interp \
 				--enable-rubyinterp --enable-luainterp \
@@ -121,7 +128,7 @@ do_install() {
 	rm -f ${DESTDIR}/usr/bin/{ex,view}
 
 	# install gvim icons
-	if [ "$build_option_gtk3" ]; then
+	if [ "$build_option_gtk2" ]; then
 		cd ${wrksrc}/gvim
 		sed -i "s|/locolor|/hicolor|g" src/Makefile
 		for d in 16 32 48; do
