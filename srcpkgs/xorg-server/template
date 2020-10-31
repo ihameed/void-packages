@@ -3,7 +3,15 @@ pkgname=xorg-server
 version=21.1.9
 revision=1
 build_style=meson
-configure_args="-Dipv6=true -Dxorg=true -Dxnest=true -Dxephyr=true
+
+#configure_args="-Dipv6=true -Dxorg=true -Dxnest=true -Dxephyr=true
+# -Dxvfb=true -Dhal=false -Dudev=true -Dxkb_dir=/usr/share/X11/xkb
+# -Dxkb_output_dir=/var/lib/xkb -Dfont_root_dir=/usr/share/fonts/X11
+# -Ddmx=true -Dlinux_acpi=true -Dlinux_apm=false -Dsuid_wrapper=true
+# -Dxcsecurity=true -Dsystemd_logind=$(vopt_if elogind true false)
+# -Dos_vendor=Void -Dglamor=true -Ddri2=true -Ddri3=true -Dglx=true
+# -Dxwayland=true"
+configure_args="-Dipv6=false -Dxorg=true -Dxnest=true -Dxephyr=true
  -Dxvfb=true -Dhal=false -Dudev=true -Dxkb_dir=/usr/share/X11/xkb
  -Dxkb_output_dir=/var/lib/xkb
  -Dlinux_acpi=true -Dlinux_apm=false -Dsuid_wrapper=true
