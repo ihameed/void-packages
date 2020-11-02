@@ -1,0 +1,39 @@
+--- vmwgfx/vmwgfx_driver.c.orig	2016-09-16 03:58:28.611030813 -0700
++++ vmwgfx/vmwgfx_driver.c	2016-09-16 03:53:43.113656575 -0700
+@@ -643,13 +643,35 @@
+ vmwgfx_scanout_update(int drm_fd, int fb_id, RegionPtr dirty)
+ {
+     unsigned num_cliprects = REGION_NUM_RECTS(dirty);
+-    drmModeClip *clip = alloca(num_cliprects * sizeof(drmModeClip));
++    drmModeClip *clip;
+     BoxPtr rect = REGION_RECTS(dirty);
+     int i, ret;
+ 
+     if (!num_cliprects)
+ 	return TRUE;
+ 
++    if (num_cliprects > 256) {
++	INT32 x1, x2, y1, y2;
++	x1 = rect->x1;
++	y1 = rect->y1;
++	x2 = rect->x2;
++	y2 = rect->y2;
++	rect++;
++	for (i = 1; i < num_cliprects; i++, rect++) {
++	    x1 = min(x1, rect->x1);
++	    y1 = min(y1, rect->y1);
++	    x2 = max(x2, rect->x2);
++	    y2 = max(y2, rect->y2);
++	}
++	num_cliprects = 1;
++	rect = REGION_RECTS(dirty);
++	rect->x1 = x1;
++	rect->y1 = y1;
++	rect->x2 = x2;
++	rect->y2 = y2;
++    }
++
++    clip = alloca(num_cliprects * sizeof(drmModeClip));
+     for (i = 0; i < num_cliprects; i++, rect++) {
+ 	clip[i].x1 = rect->x1;
+ 	clip[i].y1 = rect->y1;
