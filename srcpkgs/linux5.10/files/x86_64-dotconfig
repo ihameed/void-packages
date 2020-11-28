@@ -104,8 +104,8 @@ CONFIG_HIGH_RES_TIMERS=y
 # end of Timers subsystem
 
 # CONFIG_PREEMPT_NONE is not set
-CONFIG_PREEMPT_VOLUNTARY=y
-# CONFIG_PREEMPT is not set
+# CONFIG_PREEMPT_VOLUNTARY is not set
+CONFIG_PREEMPT=y
 
 #
 # CPU/Task time and stats accounting
