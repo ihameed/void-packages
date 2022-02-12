@@ -1,6 +1,6 @@
 # Template file for 'phantomstyle'
 pkgname=phantomstyle
-_commit=1cc9ff4
+_commit=309c97a955f6cdfb1987d1dd04c34d667e4bfce1
 version=66
 revision=1
 build_wrksrc=src/styleplugin
