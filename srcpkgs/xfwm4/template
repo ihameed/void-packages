@@ -5,9 +5,12 @@ revision=1
 build_style=gnu-configure
 configure_args="--with-locales-dir=/usr/share/locale"
 hostmakedepends="pkg-config intltool"
-makedepends="libxfce4ui-devel startup-notification-devel
+makedepends="libxfce4ui-devel
  libXcomposite-devel libXdamage-devel libXfixes-devel libXrandr-devel
  libXrender-devel libXpresent-devel libwnck-devel"
+#makedepends="libxfce4ui-devel startup-notification-devel
+# libXcomposite-devel libXdamage-devel libXfixes-devel libXrandr-devel
+# libXrender-devel libXpresent-devel libwnck-devel"
 depends="hicolor-icon-theme desktop-file-utils"
 short_desc="Next generation window manager for Xfce"
 maintainer="Đoàn Trần Công Danh <congdanhqx@gmail.com>"
@@ -21,4 +24,5 @@ post_patch() {
 	if [ "$XBPS_TARGET_WORDSIZE" = "32" -o "$XBPS_TARGET_ENDIAN" = "be" ]; then
 		vsed -i '/use_compositing/s/true/false/' defaults/defaults
 	fi
+	sed -i 's/libstartup-notification/XXX-libstartup-notification/' configure
 }
