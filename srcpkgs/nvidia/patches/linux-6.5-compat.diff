@@ -1,0 +1,98 @@
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/common/inc/nv-mm.h  2023-10-23 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/common/inc/nv-mm.h  2023-10-23 00:00:00.00 +0000
+@@ -93,7 +93,11 @@ typedef int vm_fault_t;
+             if (force)
+                 flags |= FOLL_FORCE;
+ 
++#if defined(NV_GET_USER_PAGES_DROPPED_VMA)
++            return get_user_pages(start, nr_pages, flags, pages);
++#else
+             return get_user_pages(start, nr_pages, flags, pages, vmas);
++#endif
+         }
+     #endif
+ #endif
+@@ -162,7 +162,9 @@ typedef int vm_fault_t;
+                return get_user_pages_remote(mm, start, nr_pages, flags,
+                                             pages, vmas, NULL);
+             #endif
+-
++        #elif defined(NV_GET_USER_PAGES_REMOTE_DROPPED_VMA)
++		return get_user_pages_remote(mm, start, nr_pages, flags,
++			                     pages, NULL);
+         #else
+ 
+                return get_user_pages_remote(tsk, mm, start, nr_pages, flags,
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/conftest.sh     2023-10-23 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/conftest.sh     2023-10-23 00:00:00.00 +0000
+@@ -2411,7 +2411,6 @@
+             # write and force parameters AND that gup has task_struct and
+             # mm_struct as its first arguments.
+             # Return if available.
+-            # Fall through to default case if absent.
+ 
+             echo "$CONFTEST_PREAMBLE
+             #include <linux/mm.h>
+@@ -2435,6 +2434,30 @@
+                 return
+             fi
+ 
++            # Conftest #4: Check if get_user_pages dropped vmas argument.
++            # Return if postive.
++            # Fall through to default case if absent.
++
++            echo "$CONFTEST_PREAMBLE
++            #include <linux/mm.h>
++            long get_user_pages(unsigned long start,
++                                unsigned long nr_pages,
++                                unsigned int gup_flags,
++                                struct page **pages) {
++                return 0;
++            }" > conftest$$.c
++
++            $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
++            rm -f conftest$$.c
++
++            if [ -f conftest$$.o ]; then
++                echo "#undef NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS" | append_conftest "functions"
++                echo "#undef NV_GET_USER_PAGES_HAS_TASK_STRUCT" | append_conftest "functions"
++                echo "#define NV_GET_USER_PAGES_DROPPED_VMA" | append_conftest "functions"
++                rm -f conftest$$.o
++                return
++            fi
++
+             echo "#define NV_GET_USER_PAGES_HAS_WRITE_AND_FORCE_ARGS" | append_conftest "functions"
+             echo "#define NV_GET_USER_PAGES_HAS_TASK_STRUCT" | append_conftest "functions"
+ 
+@@ -2573,7 +2596,30 @@
+                 echo "#define NV_GET_USER_PAGES_REMOTE_HAS_TSK_ARG" | append_conftest "functions"
+                 echo "#undef NV_GET_USER_PAGES_REMOTE_HAS_LOCKED_ARG" | append_conftest "functions"
+             fi
+-        ;;
++
++            #
++            # conftest #5: check if get_user_pages_remote() does not take
++            # vmas argument.
++            #
++            echo "$CONFTEST_PREAMBLE
++            #include <linux/mm.h>
++            long get_user_pages_remote(struct mm_struct *mm,
++                                       unsigned long start,
++                                       unsigned long nr_pages,
++                                       unsigned int gup_flags,
++                                       struct page **pages,
++                                       int *locked) {
++                return 0;
++            }" > conftest$$.c
++
++            $CC $CFLAGS -c conftest$$.c > /dev/null 2>&1
++            rm -f conftest$$.c
++
++            if [ -f conftest$$.o ]; then
++                echo "#define NV_GET_USER_PAGES_REMOTE_DROPPED_VMA" | append_conftest "functions"
++                rm -f conftest$$.o
++            fi
++         ;;
+ 
+         usleep_range)
+             #
