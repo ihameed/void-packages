@@ -1,0 +1,94 @@
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/common/inc/nv-linux.h	2023-06-14 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/common/inc/nv-linux.h	2023-06-14 00:00:00.00 +0000
+@@ -1988,4 +1988,17 @@ static inline void nv_mutex_destroy(struct mutex *lock)
+
+ }
+
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
++// Rel. commit "mm: introduce vma->vm_flags wrapper functions" (Suren Baghdasaryan, 26 Jan 2023)
++static inline void vm_flags_set(struct vm_area_struct *vma, vm_flags_t flags)
++{
++    vma->vm_flags |= flags;
++}
++
++static inline void vm_flags_clear(struct vm_area_struct *vma, vm_flags_t flags)
++{
++    vma->vm_flags &= ~flags;
++}
++#endif
++
+ #endif  /* _NV_LINUX_H_ */
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia-drm/nvidia-drm-gem-user-memory.c	2023-06-14 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia-drm/nvidia-drm-gem-user-memory.c	2023-06-14 00:00:00.00 +0000
+@@ -35,6 +35,7 @@
+ #include "linux/dma-buf.h"
+ #include "linux/mm.h"
+ #include "nv-mm.h"
++#include "nv-linux.h"
+
+ static inline
+ void __nv_drm_gem_user_memory_free(struct nv_drm_gem_object *nv_gem)
+@@ -92,9 +93,9 @@ static int __nv_drm_gem_user_memory_mmap(struct nv_drm_gem_object *nv_gem,
+         return -EINVAL;
+     }
+
+-    vma->vm_flags &= ~VM_PFNMAP;
+-    vma->vm_flags &= ~VM_IO;
+-    vma->vm_flags |= VM_MIXEDMAP;
++    vm_flags_clear(vma, VM_PFNMAP);
++    vm_flags_clear(vma, VM_IO);
++    vm_flags_set(vma, VM_MIXEDMAP);
+
+     return 0;
+ }
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia-uvm/uvm.c	2023-06-14 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia-uvm/uvm.c	2023-06-14 00:00:00.00 +0000
+@@ -812,7 +812,7 @@ static int uvm_mmap(struct file *filp, struct vm_area_struct *vma)
+     // Using VM_DONTCOPY would be nice, but madvise(MADV_DOFORK) can reset that
+     // so we have to handle vm_open on fork anyway. We could disable MADV_DOFORK
+     // with VM_IO, but that causes other mapping issues.
+-    vma->vm_flags |= VM_MIXEDMAP | VM_DONTEXPAND;
++    vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND);
+
+     vma->vm_ops = &uvm_vm_ops_managed;
+
+--- a/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia/nv-mmap.c	2023-06-14 00:00:00.00 +0000
++++ b/NVIDIA-Linux-x86_64-515.86.01/kernel/nvidia/nv-mmap.c	2023-06-14 00:00:00.00 +0000
+@@ -447,7 +447,7 @@ static int nvidia_mmap_numa(
+     }
+
+     // Needed for the linux kernel for mapping compound pages
+-    vma->vm_flags |= VM_MIXEDMAP;
++    vm_flags_set(vma, VM_MIXEDMAP);
+
+     for (i = 0, addr = mmap_context->page_array[0]; i < pages;
+          addr = mmap_context->page_array[++i], start += PAGE_SIZE)
+@@ -596,7 +596,7 @@ int nvidia_mmap_helper(
+         }
+         up(&nvl->mmap_lock);
+
+-        vma->vm_flags |= VM_IO | VM_PFNMAP | VM_DONTEXPAND;
++        vm_flags_set(vma, VM_IO | VM_PFNMAP | VM_DONTEXPAND);
+     }
+     else
+     {
+@@ -663,15 +663,15 @@ int nvidia_mmap_helper(
+
+         NV_PRINT_AT(NV_DBG_MEMINFO, at);
+
+-        vma->vm_flags |= (VM_IO | VM_LOCKED | VM_RESERVED);
+-        vma->vm_flags |= (VM_DONTEXPAND | VM_DONTDUMP);
++        vm_flags_set(vma, VM_IO | VM_LOCKED | VM_RESERVED);
++        vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+     }
+
+     if ((prot & NV_PROTECT_WRITEABLE) == 0)
+     {
+         vma->vm_page_prot = NV_PGPROT_READ_ONLY(vma->vm_page_prot);
+-        vma->vm_flags &= ~VM_WRITE;
+-        vma->vm_flags &= ~VM_MAYWRITE;
++        vm_flags_clear(vma, VM_WRITE);
++        vm_flags_clear(vma, VM_MAYWRITE);
+     }
+
+     vma->vm_ops = &nv_vm_ops;
