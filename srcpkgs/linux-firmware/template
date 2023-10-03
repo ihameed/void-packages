@@ -1,6 +1,6 @@
 # Template file for 'linux-firmware'
 pkgname=linux-firmware
-version=20230804
+version=20230919
 revision=1
 depends="linux-firmware-amd>=${version}_${revision} linux-firmware-network>=${version}_${revision}"
 short_desc="Binary firmware blobs for the Linux kernel"
@@ -8,7 +8,7 @@ maintainer="Érico Nogueira <ericonr@disroot.org>"
 license="custom:see /usr/share/licenses/linux-firmware"
 homepage="https://www.kernel.org/"
 distfiles="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-${version}.tar.gz"
-checksum=c09913f675bea9623798eebf8b238cda49b62dfa1729cc7c2c17193b0ab22ff7
+checksum=1dac602218f83f2c81dd72e599ae6c926901b3d36babccce46cd84293a37e473
 python_version=3
 nostrip=yes
 
