@@ -3,13 +3,14 @@ pkgname=plasma-integration
 version=6.1.4
 revision=1
 build_style=cmake
-configure_args="-DBUILD_TESTING=OFF -DBUILD_QT5=OFF -DKF6_HOST_TOOLING=/usr/lib/cmake
- -DKDE_INSTALL_QTPLUGINDIR=lib/qt6/plugins"
+configure_args="-DBUILD_TESTING=OFF -DKF6_HOST_TOOLING=/usr/lib/cmake"
 hostmakedepends="extra-cmake-modules pkg-config qt6-base qt6-tools gettext
- wayland-devel qt6-wayland-tools kf6-kconfig"
+ wayland-devel qt6-wayland-tools kf6-kconfig
+ qt5-qmake qt5-host-tools qt5-wayland kconfig kcoreaddons"
 makedepends="kf6-kio-devel kf6-kxmlgui-devel kf6-kstatusnotifieritem-devel
  kf6-kwayland-devel libXcursor-devel breeze-qt6 qt6-base-private-devel
- qt6-wayland-devel plasma-wayland-protocols wayland-devel"
+ qt6-wayland-devel plasma-wayland-protocols wayland-devel
+ kio-devel kwayland-devel qt5-quickcontrols2-devel qt5-wayland-devel"
 depends="noto-fonts-ttf font-hack-ttf breeze-qt6 kf6-qqc2-desktop-style"
 short_desc="Theme integration plugins for the Plasma workspaces"
 maintainer="John <me@johnnynator.dev>"
